@@ -6,8 +6,8 @@
 # include <limits.h>
 
 # define PAGE_SIZE sysconf(_SC_PAGESIZE)
-# define MAX_LITTLE_SIZE 64 - sizeof (size_t)
-# define MAX_BUDDY_SIZE PAGE_SIZE - sizeof (size_t)
+# define MAX_LITTLE_SIZE (64 - sizeof (size_t))
+# define MAX_BUDDY_SIZE (PAGE_SIZE - sizeof (size_t))
 
 enum AllocType
 {

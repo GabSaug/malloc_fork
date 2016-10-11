@@ -1,18 +1,32 @@
 #include "find.h"
 
+void* get_page_addr(void* ptr)
+{
+  char* cp = ptr;
+  char* nul = NULL;
+  size_t n = cp - nul;
+  n &= ~0xFFF;
+  ptr = nul + n;
+  return ptr;
+}
+
 size_t get_size(void* ptr)
 {
-  size_t* sp = ptr;
+  size_t* sp;
+  void* pa = get_page_addr(ptr);
   unsigned char* cp;
   enum AllocType type;
-  sp--;
-  ptr = sp;
-  cp = ptr;
+  cp = pa;
+  sp = pa;
   type = get_type(cp);
   if (type == BIG)
-    return *(sp - 1);
+    return *(sp + 1);
   else if (type == BUDDY)
-    return 0;
+  {
+    void* page = get_page_addr(ptr);
+    size_t bin = *cp & 0x7;
+    return (0x40 << bin) - 8;
+  }
   else
     return 0;
 }

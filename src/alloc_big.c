@@ -9,12 +9,11 @@ void* alloc_big(size_t size)
              MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (ptr != MAP_FAILED)
   {
-    sp = ptr;
-    *sp = size;
-    sp++;
-    ptr = sp;
     cp = ptr;
     set_type(cp, BIG);
+    sp = ptr;
+    sp++;
+    *sp = size;
     return sp + 1;
   }
   else
@@ -31,7 +30,9 @@ void free_big(void* ptr, size_t size)
 void* realloc_big(void* ptr, size_t size, size_t new_size)
 {
   size_t* sp = ptr;
-  sp -= 2;
+  sp--;
   *sp = new_size;
-  return mremap(ptr, size + META_BIG, new_size + META_BIG, MAP_ANONYMOUS);
+  sp--;
+  ptr = mremap(sp, size + META_BIG, new_size + META_BIG, MREMAP_MAYMOVE);
+  return ptr;
 }
