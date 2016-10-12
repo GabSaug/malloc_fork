@@ -5,9 +5,14 @@
 # include <unistd.h>
 # include <limits.h>
 
+# define POW2(n) (0x1 << (n))
+
 # define PAGE_SIZE sysconf(_SC_PAGESIZE)
-# define MAX_LITTLE_SIZE (64 - sizeof (size_t))
-# define MAX_BUDDY_SIZE (PAGE_SIZE - sizeof (size_t))
+
+# define BUDDY_LEVELS 7 
+# define MAX_BUDDY_SIZE (PAGE_SIZE - sizeof (size_t) - 1)
+
+# define MAX_LITTLE_SIZE (PAGE_SIZE / POW2(BUDDY_LEVELS - 1) - sizeof (size_t) - 1)
 
 enum AllocType
 {

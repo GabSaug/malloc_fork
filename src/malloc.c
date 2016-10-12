@@ -9,11 +9,12 @@ __attribute__((__visibility__("default")))
 void* malloc(size_t size)
 {
   void* ptr;
-//  if (size <= MAX_LITTLE_SIZE)
+  if (size <= MAX_LITTLE_SIZE)
+    ptr = alloc_buddy(size);
 //    ptr = alloc_little(size);
-//  else if (size <= MAX_BUDDY_SIZE)
-//    ptr = alloc_buddy(size);
-//  else
+  else if (size <= MAX_BUDDY_SIZE)
+    ptr = alloc_buddy(size);
+  else
     ptr = alloc_big(size);
   return ptr;
 }
@@ -24,11 +25,13 @@ void free(void* ptr)
   if (ptr)
   {
     size_t size = get_size(ptr);
-//    if (size <= MAX_LITTLE_SIZE)
+    enum AllocType type = get_type(ptr);
+    if (type == LITTLE)
+      free_buddy(ptr, size);
 //      free_little(ptr, size);
-//    else if (size <= MAX_BUDDY_SIZE)
-//      free_buddy(ptr, size);
-//    else
+    else if (type == BUDDY)
+      free_buddy(ptr, size);
+    else
     free_big(ptr, size);
   }
 }
@@ -49,11 +52,13 @@ void* realloc(void* ptr, size_t new_size)
   if (ptr)
   {
     size_t size = get_size(ptr);
-//    if (size <= MAX_LITTLE_SIZE)
-//      ptr = realloc_little(ptr, size, new_size);
-//    else if (size <= MAX_BUDDY_SIZE)
-//      ptr = realloc_buddy(ptr, size, new_size);
-//    else
+    enum AllocType type = get_type(ptr);
+    if (type == LITTLE)
+      ptr = realloc_buddy(ptr, size, new_size);
+//     ptr = realloc_little(ptr, size, new_size);
+    else if (type == BUDDY)
+      ptr = realloc_buddy(ptr, size, new_size);
+    else
       ptr = realloc_big(ptr, size, new_size);
     return ptr;  
   }

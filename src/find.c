@@ -23,7 +23,6 @@ size_t get_size(void* ptr)
     return *(sp + 1);
   else if (type == BUDDY)
   {
-    void* page = get_page_addr(ptr);
     size_t bin = *cp & 0x7;
     return (0x40 << bin) - 8;
   }

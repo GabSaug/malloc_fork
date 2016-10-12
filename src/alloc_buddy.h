@@ -7,6 +7,12 @@
 # include "malloc.h"
 # include "find.h"
 
+enum Side
+{
+  LEFT,
+  RIGHT 
+};
+
 void* alloc_buddy(size_t size);
 void free_buddy(void* ptr, size_t size);
 void* realloc_buddy(void* ptr, size_t size, size_t new_size);
