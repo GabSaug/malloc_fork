@@ -1,12 +1,20 @@
 #include "alloc_buddy.h"
 
-//static void* addr_pages[BUDDY_LEVELS] = { NULL };
-static void* page = NULL;
+static void* pages[BUDDY_LEVELS] = { NULL };
 
 size_t max_bytes(int level)
 {
   int bytes = PAGE_SIZE >> level;
   return bytes - sizeof (size_t);
+}
+
+static int needed_level(size_t size)
+{
+  int level;
+  for (level = 0; max_bytes(level - 1) >= size && level < BUDDY_LEVELS - 1;
+       level++)
+    continue;
+  return level;
 }
 
 static void set_buddy_size(unsigned char* cp, int level)
@@ -40,22 +48,45 @@ static void set_free(unsigned char* cp, int f)
   set_bit(cp, 6, f);
 }
 
-static void* create_page(void)
+static int get_free(unsigned char* cp)
+{
+  return get_bit(cp, 6);
+}
+
+static int is_empty(void* ptr)
+{
+  return get_buddy_size(ptr) == 0 && get_free(ptr);
+}
+
+static void delete_page(void* ptr)
+{
+  munmap(ptr, SIZE_PAGE);
+  for (int i = 0; i < BUDDY_LEVELS; i++)
+  {
+    if (pages[i] == ptr)
+      pages[i] = NULL;
+  }
+}
+
+static void create_page(int level)
 {
   void* ptr;
   unsigned char* cp;
-  ptr = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+  int i;
+  ptr = mmap(NULL, SIZE_PAGE, PROT_READ | PROT_WRITE,
              MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   cp = ptr;
   set_type(cp, BUDDY);
   set_buddy_size(cp, 0);
   set_free(cp, 1);
-  return ptr;
-}
-
-static int get_free(unsigned char* cp)
-{
-  return get_bit(cp, 6);
+  
+  for (i = 0; i <= level; i++)
+    pages[i] = ptr;
+  for (; i < BUDDY_LEVELS; i++)
+  {
+    if (!pages[i])
+      pages[i] = ptr;
+  }
 }
 
 static void* get_left_buddy(void* ptr, int level)
@@ -152,16 +183,17 @@ static void* expand_buddy(void* ptr, size_t size, int level)
 
 void* alloc_buddy(size_t size)
 {
+  int level = needed_level(size);
   void *ptr;
-  if (!page)
-    page = create_page();
+  if (!pages[level])
+    create_page(level);
 
-  ptr = alloc_in_page(page, size, 0, LEFT);
+  ptr = alloc_in_page(pages[level], size, 0, LEFT);
   if (ptr)
     return ptr;
   else
   {
-    page = NULL;
+    pages[level] = NULL;
     return alloc_buddy(size);
   }
 }
@@ -178,6 +210,9 @@ void free_buddy(void* ptr, size_t size)
   set_free(cp, 1);
   merge_buddy(sp, level);
   size = size;
+
+  if (is_empty(sp))
+    delete_page(sp);
 }
 
 void* realloc_buddy(void* ptr, size_t size, size_t new_size)

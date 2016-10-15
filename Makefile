@@ -13,8 +13,8 @@ all: $(BIN)
 $(BIN): $(OBJ)
 	$(CC) -shared $(CFLAGS) -o $@ $^
 
-check: all
-	@sh -c "cd tests && ./tests.sh"
+check:
+	$(CC) $(CFLAGS) $(SRC) src/test.c
 
 clean:
 	$(RM) $(OBJ) $(BIN) vgcore.*

@@ -2,7 +2,6 @@
 # define ALLOC_BIG_H_
 
 # define _GNU_SOURCE
-# define _DEFAULT_SOURCE
 
 # define META_BIG (2 * sizeof (size_t))
 
