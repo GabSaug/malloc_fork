@@ -1,8 +1,6 @@
 #ifndef ALLOC_LITTLE_H_
 # define ALLOC_LITTLE_H_
 
-# define _DEFAULT_SOURCE
-
 # include <sys/mman.h>
 # include "malloc.h"
 # include "find.h"

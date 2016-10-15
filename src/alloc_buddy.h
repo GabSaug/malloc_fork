@@ -1,9 +1,10 @@
 #ifndef ALLOC_BUDDY_H_
 # define ALLOC_BUDDY_H_
 
-# define _DEFAULT_SOURCE
+# define _GNU_SOURCE
 
 # include <sys/mman.h>
+# include <string.h>
 # include "malloc.h"
 # include "find.h"
 
@@ -13,6 +14,8 @@ enum Side
   RIGHT 
 };
 
+size_t max_bytes(int level);
+int get_buddy_size(unsigned char* ptr);
 void* alloc_buddy(size_t size);
 void free_buddy(void* ptr, size_t size);
 void* realloc_buddy(void* ptr, size_t size, size_t new_size);

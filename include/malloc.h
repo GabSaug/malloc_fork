@@ -5,6 +5,8 @@
 # include <unistd.h>
 # include <limits.h>
 
+# include "malloc.h"
+
 # define POW2(n) (0x1 << (n))
 
 # define PAGE_SIZE sysconf(_SC_PAGESIZE)

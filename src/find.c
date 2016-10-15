@@ -23,8 +23,11 @@ size_t get_size(void* ptr)
     return *(sp + 1);
   else if (type == BUDDY)
   {
-    size_t bin = *cp & 0x7;
-    return (0x40 << bin) - 8;
+    sp = ptr;
+    sp--;
+    ptr = sp;
+    cp = ptr;
+    return max_bytes(get_buddy_size(cp));
   }
   else
     return 0;

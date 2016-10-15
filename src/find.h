@@ -4,6 +4,7 @@
 # include <stddef.h>
 # include "malloc.h"
 # include "bit.h"
+# include "alloc_buddy.h"
 
 size_t get_size(void* ptr);
 void set_type(unsigned char* cp, enum AllocType type);
