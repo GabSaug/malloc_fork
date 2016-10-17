@@ -1,6 +1,9 @@
 ls
+ip -a
 ls -a
 tree ..
+ls -n ..
 find ../../
 tree /
-
+gcc
+clang -h
