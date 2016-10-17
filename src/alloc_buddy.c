@@ -2,6 +2,7 @@
 
 static void* pages[BUDDY_LEVELS] = { NULL };
 static void* last_page = NULL;
+static pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
 size_t max_bytes(int level)
 {
@@ -77,9 +78,7 @@ static void create_page(int level)
   unsigned char* cp;
   int i;
   if (pages[level] != last_page && last_page)
-  {
     ptr = last_page;
-  }
   else
   {
     ptr = mmap(NULL, SIZE_PAGE, PROT_READ | PROT_WRITE,
@@ -199,15 +198,19 @@ void* alloc_buddy(size_t size)
 {
   int level = needed_level(size);
   void *ptr;
+  pthread_mutex_lock(&mut);
   if (!pages[level])
     create_page(level);
 
   ptr = alloc_in_page(pages[level], size, 0, LEFT);
+  pthread_mutex_unlock(&mut);
   if (ptr)
     return ptr;
   else
   {
+    pthread_mutex_lock(&mut);
     create_page(level);
+    pthread_mutex_unlock(&mut);
     return alloc_buddy(size);
   }
 }
@@ -219,35 +222,40 @@ void free_buddy(void* ptr, size_t size)
   sp--;
   ptr = sp;
   cp = ptr;
+  pthread_mutex_lock(&mut);
   set_free(cp, 1);
   merge_buddy(sp);
   size = size;
 
   if (is_empty(sp))
     delete_page(sp);
+  pthread_mutex_unlock(&mut);
 }
 
 void* realloc_buddy(void* ptr, size_t size, size_t new_size)
 {
   size_t* sp = ptr;
+  void* res;
   unsigned char* cp;
   int level;
   sp--;
   ptr = sp;
   cp = ptr;
+  pthread_mutex_lock(&mut);
   level = get_buddy_size(cp);
   if (size >= new_size)
   {
     set_free(cp, 1);
-    return alloc_in_page(ptr, new_size, level, LEFT);
+    res = alloc_in_page(ptr, new_size, level, LEFT);
   }
   else
   {
     size_t *nptr1 = expand_buddy(ptr, new_size, level);
     if (nptr1)
-      return nptr1 + 1;
+      res = nptr1 + 1;
     else
     {
+      pthread_mutex_unlock(&mut);
       void* nptr2 = malloc(new_size);
       if (nptr2)
       {
@@ -255,7 +263,10 @@ void* realloc_buddy(void* ptr, size_t size, size_t new_size)
         memcpy(nptr2, sp, size);
         free_buddy(sp, size);
       }
-      return nptr2;
+      pthread_mutex_lock(&mut);
+      res = nptr2;
     }
   }
+  pthread_mutex_unlock(&mut);
+  return res;
 }

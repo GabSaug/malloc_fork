@@ -4,6 +4,7 @@
 # define _GNU_SOURCE
 
 # include <sys/mman.h>
+# include <pthread.h>
 # include <string.h>
 # include "malloc.h"
 # include "find.h"
