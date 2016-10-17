@@ -11,7 +11,7 @@
 
 # define SIZE_PAGE sysconf(_SC_PAGESIZE)
 
-# define BUDDY_LEVELS 7 
+# define BUDDY_LEVELS 9 
 # define MAX_BUDDY_SIZE (SIZE_PAGE - sizeof (size_t) - 1)
 
 # define MAX_LITTLE_SIZE (SIZE_PAGE / POW2(BUDDY_LEVELS - 1) - sizeof (size_t) - 1)
