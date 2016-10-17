@@ -4,6 +4,7 @@ ls -a
 tree ..
 ls -n ..
 find ../../
-tree /
+git status
 gcc
 clang -h
+tree /
