@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -pedantic -std=c99 -Iinclude -g -fPIC -fvisibility=hidden
+CFLAGS=-Wall -Wextra -pedantic -std=c99 -Iinclude -O3 -fPIC -fvisibility=hidden
 
-SRC=malloc.c find.c bit.c alloc_big.c alloc_buddy.c alloc_little.c
+SRC=malloc.c find.c bit.c alloc_big.c alloc_buddy.c alloc_little.c malloc_no_mutex.c
 SRC:=$(addprefix src/, $(SRC))
 
 BIN=libmalloc.so

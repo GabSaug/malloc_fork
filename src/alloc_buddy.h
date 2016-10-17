@@ -4,9 +4,9 @@
 # define _GNU_SOURCE
 
 # include <sys/mman.h>
-# include <pthread.h>
 # include <string.h>
 # include "malloc.h"
+# include "malloc_no_mutex.h"
 # include "find.h"
 
 enum Side

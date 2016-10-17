@@ -1,65 +1,46 @@
 #include <string.h>
+#include <pthread.h>
 
 #include "malloc.h"
-#include "alloc_little.h"
-#include "alloc_buddy.h"
-#include "alloc_big.h"
+#include "malloc_no_mutex.h"
+
+static pthread_mutex_t mux = PTHREAD_MUTEX_INITIALIZER;
 
 __attribute__((__visibility__("default")))
 void* malloc(size_t size)
 {
   void* ptr;
-  
-//  if (size <= MAX_LITTLE_SIZE)
-//    ptr = alloc_little(size);
-  if (size <= MAX_BUDDY_SIZE)
-    ptr = alloc_buddy(size);
-  else
-    ptr = alloc_big(size);
+  pthread_mutex_lock(&mux);
+  ptr = malloc_no_mutex(size);
+  pthread_mutex_unlock(&mux);
   return ptr;
 }
 
 __attribute__((__visibility__("default")))
 void free(void* ptr)
 {
-  if (ptr)
-  {
-    size_t size = get_size(ptr);
-    enum AllocType type = get_type(ptr);
-//    if (type == LITTLE)
-//      free_little(ptr, size);
-    if (type == BUDDY)
-      free_buddy(ptr, size);
-    else
-      free_big(ptr, size);
-  }
+  pthread_mutex_lock(&mux);
+  free_no_mutex(ptr);
+  pthread_mutex_unlock(&mux);
 }
 
 __attribute__((__visibility__("default")))
 void* calloc(size_t number, size_t size)
 {
   size_t real_size = number * size;
-  void* ptr = malloc(real_size);
+  pthread_mutex_lock(&mux);
+  void* ptr = malloc_no_mutex(real_size);
   if (ptr)
     memset(ptr, 0, real_size);
+  pthread_mutex_unlock(&mux);
   return ptr;
 }
 
 __attribute__((__visibility__("default")))
 void* realloc(void* ptr, size_t new_size)
 {
-  if (ptr)
-  {
-    size_t size = get_size(ptr);
-    enum AllocType type = get_type(ptr);
-//    if (type == LITTLE)
-//      ptr = realloc_little(ptr, size, new_size);
-    if (type == BUDDY)
-      ptr = realloc_buddy(ptr, size, new_size);
-    else
-      ptr = realloc_big(ptr, size, new_size);
-    return ptr;  
-  }
-  else
-    return malloc(new_size);
+  pthread_mutex_lock(&mux);
+  ptr = realloc_no_mutex(ptr, new_size);
+  pthread_mutex_unlock(&mux);
+  return ptr;
 }
