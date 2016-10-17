@@ -1,0 +1,13 @@
+-- Malloc project
+
+void* malloc(size_t size) :
+  Return a pointer on an allocated memory block of size 'size'.
+
+void* calloc(size_t number, size_t size) :
+  Return a pointer on an array with 'number' cases of size 'size'.
+
+void* realloc(void* ptr, size_t size) :
+  Resize a previously allocated memory area to the new size 'size'.
+
+void free(void* ptr) :
+  Release allocated memory.

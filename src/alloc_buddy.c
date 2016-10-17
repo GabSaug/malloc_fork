@@ -1,17 +1,18 @@
 #include "alloc_buddy.h"
 
 static void* pages[BUDDY_LEVELS] = { NULL };
+static void* last_page = NULL;
 
 size_t max_bytes(int level)
 {
-  int bytes = PAGE_SIZE >> level;
+  int bytes = SIZE_PAGE >> level;
   return bytes - sizeof (size_t);
 }
 
 static int needed_level(size_t size)
 {
   int level;
-  for (level = 0; max_bytes(level - 1) >= size && level < BUDDY_LEVELS - 1;
+  for (level = 0; max_bytes(level + 1) >= size && level < BUDDY_LEVELS - 1;
        level++)
     continue;
   return level;
@@ -66,6 +67,8 @@ static void delete_page(void* ptr)
     if (pages[i] == ptr)
       pages[i] = NULL;
   }
+  if (last_page == ptr)
+    last_page = NULL;
 }
 
 static void create_page(int level)
@@ -73,13 +76,19 @@ static void create_page(int level)
   void* ptr;
   unsigned char* cp;
   int i;
-  ptr = mmap(NULL, SIZE_PAGE, PROT_READ | PROT_WRITE,
-             MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  cp = ptr;
-  set_type(cp, BUDDY);
-  set_buddy_size(cp, 0);
-  set_free(cp, 1);
-  
+  if (pages[level] != last_page && last_page)
+  {
+    ptr = last_page;
+  }
+  else
+  {
+    ptr = mmap(NULL, SIZE_PAGE, PROT_READ | PROT_WRITE,
+               MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    cp = ptr;
+    set_type(cp, BUDDY);
+    set_buddy_size(cp, 0);
+    set_free(cp, 1);
+  }
   for (i = 0; i <= level; i++)
     pages[i] = ptr;
   for (; i < BUDDY_LEVELS; i++)
@@ -87,6 +96,7 @@ static void create_page(int level)
     if (!pages[i])
       pages[i] = ptr;
   }
+  last_page = ptr;
 }
 
 static void* get_left_buddy(void* ptr, int level)
@@ -108,13 +118,17 @@ static void cut_buddy(void* ptr, int level)
   set_free(ptr, 1);
 }
 
-static void merge_buddy(void* ptr, int level)
+static void merge_buddy(void* ptr)
 {
-  if (level > 0 && get_free(ptr) && get_free(change_side(ptr, level)))
+  unsigned char* cp = ptr;
+  int level = get_buddy_size(cp);
+  unsigned char* cpb = change_side(cp, level);
+  if (level != 0 && level == get_buddy_size(cpb)
+      && get_free(ptr) && get_free(cpb))
   {
-    unsigned char* cp = get_left_buddy(ptr, level);
+    cp = get_left_buddy(cp, level);
     set_buddy_size(cp, level - 1);
-    merge_buddy(cp, level - 1);
+    merge_buddy(cp);
   }
 }
 
@@ -149,7 +163,7 @@ static void* alloc_in_page(void* ptr, size_t size, int level, enum Side side)
         return alloc_in_page(ptr, size, level + 1, LEFT);
       }
     }
-    else if (side == LEFT)
+    else if (side == LEFT && level != 0)
       return alloc_in_page(change_side(ptr, level), size, level, RIGHT);
     else
       return NULL;
@@ -193,7 +207,7 @@ void* alloc_buddy(size_t size)
     return ptr;
   else
   {
-    pages[level] = NULL;
+    create_page(level);
     return alloc_buddy(size);
   }
 }
@@ -202,13 +216,11 @@ void free_buddy(void* ptr, size_t size)
 {
   size_t* sp = ptr;
   unsigned char* cp;
-  int level;
   sp--;
   ptr = sp;
   cp = ptr;
-  level = get_buddy_size(cp);
   set_free(cp, 1);
-  merge_buddy(sp, level);
+  merge_buddy(sp);
   size = size;
 
   if (is_empty(sp))
@@ -231,18 +243,19 @@ void* realloc_buddy(void* ptr, size_t size, size_t new_size)
   }
   else
   {
-    ptr = expand_buddy(ptr, new_size,level);
-    if (ptr)
-      return ptr;
+    size_t *nptr1 = expand_buddy(ptr, new_size, level);
+    if (nptr1)
+      return nptr1 + 1;
     else
     {
-      void* nptr = malloc(new_size);
-      if (nptr)
+      void* nptr2 = malloc(new_size);
+      if (nptr2)
       {
-        memcpy(nptr, ptr, size);
-        free_buddy(ptr, size);
+        sp++;
+        memcpy(nptr2, sp, size);
+        free_buddy(sp, size);
       }
-      return nptr;
+      return nptr2;
     }
   }
 }

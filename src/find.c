@@ -50,6 +50,7 @@ void set_type(unsigned char* cp, enum AllocType type)
 
 enum AllocType get_type(unsigned char* cp)
 {
+  cp = get_page_addr(cp);
   if (!get_bit(cp, 7))
     return BUDDY;
   else

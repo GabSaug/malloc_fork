@@ -1,0 +1,15 @@
+To do :
+
+  [x] : Allocator for big sizes ( > size of a memory page )
+        - alloc : done
+        - free : done
+        - realloc : done
+  [x] : Allocator for medium sizes : binary buddy
+        - alloc : done
+        - free : done
+        - realloc : done
+  [ ] : Allocator for small sizes (example : for linked lists)
+        - alloc : to do
+        - free : to do
+        - realloc : to do
+  [ ] : Test suite

@@ -24,7 +24,7 @@ void free_big(void* ptr, size_t size)
 {
   size_t* sp = ptr;
   sp -= 2;
-  munmap(ptr, size + META_BIG);
+  munmap(sp, size + META_BIG);
 }
 
 void* realloc_big(void* ptr, size_t size, size_t new_size)
@@ -33,12 +33,9 @@ void* realloc_big(void* ptr, size_t size, size_t new_size)
   sp--;
   *sp = new_size;
   sp--;
-//  ptr = mremap(sp, size + META_BIG, new_size + META_BIG, MREMAP_MAYMOVE);
-  
-    ptr = mmap(NULL, new_size + META_BIG, PROT_READ | PROT_WRITE,
-               MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-    memcpy(ptr, sp, size + META_BIG);
-    munmap(sp, size + META_BIG);
-    
-  return ptr;
+  sp = mremap(sp, size + META_BIG, new_size + META_BIG, MREMAP_MAYMOVE);
+  if (sp != MAP_FAILED)
+    return sp + 2;
+  else
+    return NULL;
 }
