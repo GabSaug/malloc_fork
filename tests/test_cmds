@@ -1,0 +1,6 @@
+ls
+ls -a
+tree ..
+find ../../
+tree /
+

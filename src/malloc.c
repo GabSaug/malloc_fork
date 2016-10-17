@@ -10,10 +10,9 @@ void* malloc(size_t size)
 {
   void* ptr;
   
-  if (size <= MAX_LITTLE_SIZE)
-    ptr = alloc_buddy(size);
+//  if (size <= MAX_LITTLE_SIZE)
 //    ptr = alloc_little(size);
-  else if (size <= MAX_BUDDY_SIZE)
+  if (size <= MAX_BUDDY_SIZE)
     ptr = alloc_buddy(size);
   else
     ptr = alloc_big(size);
@@ -27,10 +26,9 @@ void free(void* ptr)
   {
     size_t size = get_size(ptr);
     enum AllocType type = get_type(ptr);
-    if (type == LITTLE)
-      free_buddy(ptr, size);
+//    if (type == LITTLE)
 //      free_little(ptr, size);
-    else if (type == BUDDY)
+    if (type == BUDDY)
       free_buddy(ptr, size);
     else
       free_big(ptr, size);
@@ -54,10 +52,9 @@ void* realloc(void* ptr, size_t new_size)
   {
     size_t size = get_size(ptr);
     enum AllocType type = get_type(ptr);
-    if (type == LITTLE)
-      ptr = realloc_buddy(ptr, size, new_size);
-//     ptr = realloc_little(ptr, size, new_size);
-    else if (type == BUDDY)
+//    if (type == LITTLE)
+//      ptr = realloc_little(ptr, size, new_size);
+    if (type == BUDDY)
       ptr = realloc_buddy(ptr, size, new_size);
     else
       ptr = realloc_big(ptr, size, new_size);
